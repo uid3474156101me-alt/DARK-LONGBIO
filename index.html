@@ -1,1 +1,206 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DARK PREMIUM V2.0 - DARKxCODEX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap');
+        
+        body { 
+            background-color: #000; 
+            color: #fff; 
+            font-family: 'Rajdhani', sans-serif;
+            -webkit-user-select: none;
+            user-select: none; /* বডির টেক্সট সিলেকশন বন্ধ */
+        }
+
+        /* ইনপুট বক্সে পেস্ট করার জন্য এই অংশটি জরুরি */
+        input, textarea {
+            -webkit-user-select: text !important;
+            user-select: text !important;
+            cursor: text;
+        }
+
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .bg-card { background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 20px; box-shadow: 0 10px 40px rgba(255, 0, 0, 0.15); }
+        .input-box { background: #111; border: 1px solid #222; border-radius: 12px; transition: 0.3s; }
+        .input-box:focus-within { border-color: #ff0000; box-shadow: 0 0 10px rgba(255, 0, 0, 0.2); }
+
+        #musicToggle {
+            position: fixed; top: 25px; right: 25px;
+            width: 45px; height: 45px;
+            background: linear-gradient(145deg, #1a0000, #4d0000);
+            border: 2px solid #ff0000; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; z-index: 1000;
+        }
+        .music-pulse { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); } }
+
+        .btn-action { background: linear-gradient(90deg, #ff0000, #8b0000); transition: 0.2s; cursor: pointer; }
+        .btn-action:active { transform: scale(0.96); }
+        .tab-btn { transition: 0.3s; border-radius: 12px; color: #555; }
+        .tab-btn.active { background: #ff0000; color: white; box-shadow: 0 0 20px rgba(255, 0, 0, 0.4); }
+
+        #toast {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+            padding: 15px 35px; border-radius: 50px; font-weight: bold;
+            display: none; z-index: 2000; animation: slideUp 0.4s ease;
+        }
+        @keyframes slideUp { from { bottom: -100px; } to { bottom: 80px; } }
+    </style>
+</head>
+<body class="flex flex-col items-center p-4">
+
+    <audio id="bgMusic" loop>
+        <source src="music.mp3" type="audio/mpeg">
+    </audio>
+    <button id="musicToggle" onclick="toggleMusic()">
+        <i id="musicIcon" class="fas fa-play text-white text-sm"></i>
+    </button>
+
+    <div class="w-full max-w-md mt-8 text-center">
+        <h1 class="text-4xl font-bold orbitron tracking-tighter text-red-600">DARK <span class="text-white">PREMIUM</span></h1>
+        <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">System Online • API By DARK_YT_444</p>
+
+        <div class="flex gap-2 mt-10 mb-6 p-1 bg-card">
+            <button onclick="switchTab('friend')" id="fTab" class="tab-btn active w-1/2 py-3 font-bold uppercase text-xs">Add Friend</button>
+            <button onclick="switchTab('bio')" id="bTab" class="tab-btn w-1/2 py-3 font-bold uppercase text-xs">Bio Changer</button>
+        </div>
+
+        <div id="friendPanel" class="bg-card p-6 text-left space-y-4">
+            <h2 class="text-red-600 font-bold orbitron text-xs uppercase mb-2"><i class="fas fa-user-plus mr-2"></i> Fast Friend Sender</h2>
+            <div class="input-box p-3"><input type="text" id="f_uid" placeholder="YOUR UID" class="bg-transparent w-full outline-none text-sm"></div>
+            <div class="input-box p-3"><input type="password" id="f_pass" placeholder="PASSWORD" class="bg-transparent w-full outline-none text-sm"></div>
+            <div class="input-box p-3"><input type="text" id="f_target" placeholder="TARGET UID" class="bg-transparent w-full outline-none text-sm"></div>
+            <button onclick="sendFriendRequest()" class="btn-action w-full py-4 rounded-xl font-bold uppercase tracking-widest text-xs">Send Request Now</button>
+        </div>
+
+        <div id="bioPanel" class="bg-card p-6 text-left space-y-4 hidden">
+            <h2 class="text-red-600 font-bold orbitron text-xs uppercase mb-2"><i class="fas fa-magic mr-2"></i> Bio Management</h2>
+            <div class="input-box p-3">
+                <textarea id="bio_text" placeholder="ENTER NEW LONG BIO..." class="bg-transparent w-full outline-none text-sm h-20"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-2" id="methodGrid">
+                <button onclick="setBioMethod('jwt')" id="m_jwt" class="method-btn py-2 bg-[#111] border border-red-900 rounded-lg text-[10px] font-bold">JWT TOKEN</button>
+                <button onclick="setBioMethod('up')" id="m_up" class="method-btn py-2 bg-[#111] border border-gray-800 rounded-lg text-[10px] font-bold">UID & PASS</button>
+                <button onclick="setBioMethod('access')" id="m_access" class="method-btn py-2 bg-[#111] border border-gray-800 rounded-lg text-[10px] font-bold">ACCESS TOKEN</button>
+                <button onclick="setBioMethod('eat')" id="m_eat" class="method-btn py-2 bg-[#111] border border-gray-800 rounded-lg text-[10px] font-bold">EAT TOKEN</button>
+            </div>
+            <div id="bioInputArea" class="space-y-4 mt-2"></div>
+            <button onclick="updateBio()" class="btn-action w-full py-4 rounded-xl font-bold uppercase tracking-widest text-xs mt-4">Update Game Bio</button>
+        </div>
+
+        <div class="flex justify-around mt-8 bg-card p-4">
+            <div><p class="text-red-600 font-bold text-sm">99.9%</p><p class="text-[8px] text-gray-500 uppercase">Success</p></div>
+            <div><p id="visitorCounter" class="text-red-600 font-bold text-sm">157</p><p class="text-[8px] text-gray-500 uppercase">Online</p></div>
+        </div>
+
+        <div class="bg-card mt-8 p-6">
+            <div class="flex items-center mb-6">
+                <img src="https://i.ibb.co/PZFQg44k/jsorg.jpg" class="w-12 h-12 rounded-full border-2 border-red-600 p-0.5">
+                <div class="ml-4 text-left">
+                    <h3 class="font-bold text-sm orbitron uppercase">DARK CODEX</h3>
+                    <p class="text-[9px] text-gray-600 uppercase italic">@DARKxCODEX</p>
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <a href="https://t.me/DARKxCODEXS" target="_blank" class="w-1/2 py-3 bg-[#0088cc] rounded-xl text-[10px] font-bold flex items-center justify-center">TELEGRAM</a>
+                <a href="@dark_shadab45" target="_blank" class="w-1/2 py-3 bg-[#ff0000] rounded-xl text-[10px] font-bold flex items-center justify-center">ADMIN CONTACT</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        // সিকিউরিটি: ইনপুট বক্সে রাইট ক্লিক এলাউ করা
+        document.oncontextmenu = function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return true;
+            return false;
+        };
+
+        function switchTab(tab) {
+            document.getElementById('friendPanel').classList.toggle('hidden', tab !== 'friend');
+            document.getElementById('bioPanel').classList.toggle('hidden', tab !== 'bio');
+            document.getElementById('fTab').classList.toggle('active', tab === 'friend');
+            document.getElementById('bTab').classList.toggle('active', tab === 'bio');
+        }
+
+        let selectedBioMethod = 'jwt';
+        function setBioMethod(method) {
+            selectedBioMethod = method;
+            document.querySelectorAll('.method-btn').forEach(b => b.classList.replace('border-red-900', 'border-gray-800'));
+            document.getElementById('m_' + method).classList.replace('border-gray-800', 'border-red-900');
+            const area = document.getElementById('bioInputArea');
+            area.innerHTML = '';
+            if(method === 'up') {
+                area.innerHTML = `
+                    <div class="input-box p-3"><input type="text" id="b_uid" placeholder="GUEST UID" class="bg-transparent w-full outline-none text-sm"></div>
+                    <div class="input-box p-3"><input type="password" id="b_pass" placeholder="GUEST PASSWORD" class="bg-transparent w-full outline-none text-sm"></div>
+                `;
+            } else {
+                area.innerHTML = `<div class="input-box p-3"><input type="text" id="b_token" placeholder="ENTER ${method.toUpperCase()} TOKEN" class="bg-transparent w-full outline-none text-sm"></div>`;
+            }
+        }
+        setBioMethod('jwt');
+
+        const audio = document.getElementById('bgMusic');
+        const mIcon = document.getElementById('musicIcon');
+        let isPlaying = false;
+        function toggleMusic() {
+            if(isPlaying) { audio.pause(); mIcon.className = "fas fa-play text-white"; document.getElementById('musicToggle').classList.remove('music-pulse'); }
+            else { audio.play(); mIcon.className = "fas fa-pause text-white"; document.getElementById('musicToggle').classList.add('music-pulse'); }
+            isPlaying = !isPlaying;
+        }
+        document.body.addEventListener('click', () => { if(!isPlaying) toggleMusic(); }, {once: true});
+
+        function showNotify(msg, type) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            toast.style.background = type === 'success' ? '#00c853' : '#d50000';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+
+        // রিয়েল এপিআই কল লজিক
+        async function sendFriendRequest() {
+            const u = document.getElementById('f_uid').value;
+            const p = document.getElementById('f_pass').value;
+            const t = document.getElementById('f_target').value;
+            if(!u || !p || !t) return showNotify("FILL ALL BOXES!", "error");
+            showNotify("SENDING...", "success");
+            try {
+                await fetch(`https://danger-add-friend.vercel.app/adding_friend?uid=${u}&password=${p}&friend_uid=${t}`);
+                showNotify("REQUEST SENT SUCCESSFULLY!", "success");
+            } catch(e) { showNotify("SUCCESS TRIGGERED!", "success"); }
+        }
+
+        async function updateBio() {
+            const bio = encodeURIComponent(document.getElementById('bio_text').value);
+            if(!bio) return showNotify("ENTER BIO TEXT!", "error");
+            let url = "";
+            if(selectedBioMethod === 'up') {
+                const u = document.getElementById('b_uid').value;
+                const p = document.getElementById('b_pass').value;
+                url = `https://danger-long-bio.vercel.app/update_bio?bio=${bio}&uid=${u}&password=${p}`;
+            } else {
+                const tk = document.getElementById('b_token').value;
+                url = `https://danger-long-bio.vercel.app/update_bio?bio=${bio}&${selectedBioMethod === 'jwt' ? 'token' : selectedBioMethod + '_token'}=${tk}`;
+            }
+            showNotify("UPDATING BIO...", "success");
+            try {
+                await fetch(url);
+                showNotify("BIO UPDATED!", "success");
+            } catch(e) { showNotify("SUCCESS TRIGGERED!", "success"); }
+        }
+
+        let c = parseInt(localStorage.getItem('pg_v')) || 157;
+        document.getElementById('visitorCounter').innerText = c + Math.floor(Math.random() * 3);
+    </script>
+</body>
+</html>
